@@ -48,6 +48,11 @@ public class Maze {
         if(!sFound){throw new IllegalArgumentException("S does not appear to be in the text file!");}
         if(!eFound){throw new IllegalArgumentException("E does not appear to be in the text file!");}
     }
+    public Maze(char[][] maze){
+        this.maze = maze;
+        rows = maze.length;
+        cols = maze[0].length;
+    }
 
     //This method is responsible for printing the maze.
     public void print(){

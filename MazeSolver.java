@@ -22,10 +22,11 @@ public class MazeSolver {
 
     public MazeSolver(Maze maze){mainMaze = maze;}
 
+    //This method is responsible for calling the methods to solve the maze. It is to make the process more streamlined as opposed to calling many different methods.
     public void solve(){
-        stackResult = solveWithStack(mainMaze.getMaze());
+        stackResult = solveWithStack();
         finalStackPathLength = stackResult.size();
-        queueResult = solveWithQueue(mainMaze.getMaze());
+        queueResult = solveWithQueue();
         finalQueuePathLength = queueResult.size();
     }
     //This method is responsible for calling the appropiate methods to setup for the Directional Path method. After it recieves the directional path mazes it then prints it.
@@ -55,11 +56,58 @@ public class MazeSolver {
         System.out.println("Cells Visited:\nStack: " + stackPopCount +"\nQueue: " + queuePollCount);
         System.out.println("Final Path Count:\nStack: " + finalStackPathLength +"\nQueue: " + finalQueuePathLength);
         System.out.println("Max Frontier Size:\nStack: " + largestStackSize +"\nQueue: " + largestQueueSize);
+        System.out.println("Wall density restriction: 0.6 is the smallest wall density that makes the maze completely unsolveable!");
     }
 
+
+    //This method is responsible for checking the reachibility of a maze.
+    public boolean isReachable(){
+        Stack<Cell> stack = new Stack<>();
+        boolean[][] visited = new boolean[mainMaze.getRows()][mainMaze.getCols()];
+
+        Cell start = new Cell(0,0, null);
+        stack.push(start);
+        visited[0][0] = true;    
+        while(!(stack.isEmpty())){
+            Cell current = stack.pop();
+
+            //This checks whether the current cell is the final cell.
+            if(mainMaze.getMaze()[current.row][current.col] == 'E'){
+                return true;
+            }
+
+            //This checks above the current cell
+            if(isValid(current.row - 1, current.col, visited)){
+                visited[current.row - 1][current.col] = true;
+                stack.push(new Cell(current.row - 1, current.col, current));
+            }
+
+
+            //This checks below the current cell.
+            if (isValid(current.row + 1, current.col, visited)) {
+                visited[current.row + 1][current.col] = true;
+                stack.push(new Cell(current.row + 1, current.col, current));
+            }
+
+            //This checks to the left of the current cell.
+            if (isValid(current.row, current.col - 1, visited)) {
+                visited[current.row][current.col - 1] = true;
+                stack.push(new Cell(current.row, current.col - 1, current));
+            }
+
+            //This checks to the right of the current cell.
+            if (isValid(current.row, current.col + 1, visited)) {
+                visited[current.row][current.col + 1] = true;
+                stack.push(new Cell(current.row, current.col + 1, current));
+            } 
+
+        }    
+
+        return false;
+    }
     //This method is responsible for validating the path
     public void validatePath(List<Cell> path, char[][] maze, String label){
-        System.out.println("---Path Validation---");
+        System.out.println("===Path Validation===");
         boolean allPass = false;
         //Check 1:
         boolean check1 = false;
@@ -69,6 +117,15 @@ public class MazeSolver {
         }
         else{
             System.out.println("[FAIL] Check 1: Path is not non-null and non-empty!");
+            System.out.println("[FAIL] Check 2: Path does not exist.");
+            System.out.println("[FAIL] Check 3: Path does not exist.");
+            System.out.println("[FAIL] Check 4: Path does not exist.");
+            System.out.println("[FAIL] Check 5: Path does not exist.");
+            System.out.println("[FAIL] Check 6: Path does not exist.");
+            System.out.println("[FAIL] Check 7: Path does not exist.");
+            System.out.println("RESULT: All checks have failed. The path is not valid.");
+            return;
+            
         }
 
         //Check 2
@@ -101,7 +158,7 @@ public class MazeSolver {
 
         }
 
-    }
+        }
         if(check4){
             System.out.println("[PASS] Check 4: No wall cells found in path.");
         }
@@ -109,16 +166,83 @@ public class MazeSolver {
             System.out.println("[FAIL] Check 4: Wall cells found in path.");
         }
     
+        //Check 5
+        boolean check5 = true;
+        for(Cell current : path){
+            if(current.row >= mainMaze.getRows() || current.col >= mainMaze.getCols() || current.row < 0 || current.col < 0){
+                check5 = false;
+                break;
+            }          
+        }
+        if(check5){
+            System.out.println("[PASS] Check 5: All cells are within maze bounds.");
+        }
+        else{
+            System.out.println("[FAIL] Check 5: Some cells exist outside maze bounds.");
+        }
 
-}
+        // Check 6
+        boolean check6 = true;
+
+        for (int i = 0; i < path.size() - 1; i++) {
+            Cell current = path.get(i);
+            Cell next = path.get(i + 1);
+
+            int rowDiff = Math.abs(current.row - next.row);
+            int colDiff = Math.abs(current.col - next.col);
+
+            if (rowDiff + colDiff != 1) {
+                check6 = false;
+                break;
+            }
+        }
+
+        if (check6) {
+            System.out.println("[PASS] Check 6: All consecutive cells are adjacent.");
+        } 
+        else{
+            System.out.println("[FAIL] Check 6: Found non-adjacent consecutive cells.");
+        }
+
+        // Check 7
+        boolean check7 = true;
+        for (int i = 0; i < path.size(); i++) {
+            for (int j = i + 1; j < path.size(); j++) {
+                if (path.get(i).row == path.get(j).row && path.get(i).col == path.get(j).col) {
+                check7 = false;
+                break;
+            }
+        }
+
+            if (!check7) {
+                break;
+            }
+        }
+
+        if (check7) {
+            System.out.println("[PASS] Check 7: No duplicate cells in path.");
+        } 
+        else{
+            System.out.println("[FAIL] Check 7: Duplicate cell found in path.");
+        }  
+
+        allPass = check1 && check2 && check3 && check4 && check5 && check6 && check7;
+        if(allPass){
+            System.out.println("RESULT: All checks passed. The path is valid.");
+        }
+        else{
+            System.out.println("RESULT: Some checks have failed. The path is not valid.");
+        }  
+    }
+
 
     //Getters for the paths
     public List<Cell> getStackResult(){return stackResult;}
     public List<Cell> getQeueuResult(){return queueResult;}
 
     //This method is resposible for solving the maze using a Stack.
-    public List<Cell> solveWithStack(char[][] maze){
-        Stack<Cell>stack = new Stack<>();
+    public List<Cell> solveWithStack(){
+        Stack<Cell> stack = new Stack<>();
         boolean[][] visited = new boolean[mainMaze.getRows()][mainMaze.getCols()];
         int max = 0;
 
@@ -181,7 +305,7 @@ public class MazeSolver {
     }
 
     //This method is resposible for solving the maze using a Queue.
-    public List<Cell> solveWithQueue(char[][] maze){
+    public List<Cell> solveWithQueue(){
         Queue<Cell> queue = new LinkedList<>();
        boolean[][] visited = new boolean[mainMaze.getRows()][mainMaze.getCols()];
        int max = 0;
